@@ -542,6 +542,59 @@ a:hover {
   color: var(--color-highlight);
 }
 
+/* ===== Speakers ===== */
+.speakers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.speaker-card {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.speaker-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.speaker-card h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.speaker-affiliation {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 0.75rem;
+}
+
+.speaker-bio {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.speaker-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .speakers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Organizers ===== */
 .organizers-grid {
   display: grid;
@@ -566,6 +619,15 @@ a:hover {
   font-weight: 700;
   font-size: 1.1rem;
   margin: 0 auto 1rem;
+}
+
+.organizer-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 1rem;
+  display: block;
 }
 
 .organizer-card h4 {
