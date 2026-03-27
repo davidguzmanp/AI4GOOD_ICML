@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI4GOOD — Color Palette Picker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    h1 {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .intro { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+    .palette-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .palette-card:hover {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+    .palette-card.selected {
+      border-color: #111;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+    .palette-header {
+      display: flex;
+      height: 56px;
+    }
+    .palette-header div { flex: 1; }
+    .palette-body { padding: 1.25rem; }
+    .palette-name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+    .palette-desc {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+
+    /* Mini preview */
+    .mini-preview { border-radius: 6px; overflow: hidden; border: 1px solid #e5e5e5; }
+    .mini-hero {
+      padding: 1.25rem 1rem 1rem;
+      text-align: center;
+    }
+    .mini-hero h3 {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1.1rem;
+      color: white;
+      margin-bottom: 0.2rem;
+    }
+    .mini-hero p { font-size: 0.7rem; color: rgba(255,255,255,0.8); }
+    .mini-banner {
+      text-align: center;
+      padding: 0.3rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: white;
+    }
+    .mini-section {
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+    }
+    .mini-section h4 {
+      font-size: 0.8rem;
+      margin-bottom: 0.35rem;
+    }
+    .mini-cards {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .mini-card {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #e5e5e5;
+      font-size: 0.65rem;
+      line-height: 1.3;
+    }
+    .mini-card strong { display: block; margin-bottom: 0.15rem; }
+    .mini-btn {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: white;
+      margin-top: 0.5rem;
+    }
+    .mini-timeline {
+      padding: 0.75rem 1rem;
+      font-size: 0.7rem;
+    }
+    .mini-timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.2rem 0;
+    }
+    .mini-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Output area */
+    .output {
+      margin-top: 2rem;
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: none;
+    }
+    .output.visible { display: block; }
+    .output h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+    .output pre {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    .output pre span.prop { color: #7ec8e3; }
+    .output pre span.val { color: #f8c555; }
+    .copy-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: #333; }
+  </style>
+</head>
+<body>
+  <h1>Color Palette Picker</h1>
+  <p class="intro">Click a palette to select it. Each card shows a mini-preview of how the site will look. The CSS variables will appear below for easy copy-paste.</p>
+  <div class="grid" id="grid"></div>
+  <div class="output" id="output">
+    <h2>CSS Variables for selected palette</h2>
+    <pre id="css-output"></pre>
+    <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('css-output').textContent)">Copy to clipboard</button>
+  </div>
+
+<script>
+const palettes = [
+  {
+    name: "Emerald Classic",
+    desc: "Steel blue base, vivid emerald highlight. The original.",
+    primary: "#334155",
+    primaryLight: "#475569",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#059669",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#f1f5f9", "#e2e8f0"],
+    heroTextDark: true,
+  },
+  {
+    name: "Jade",
+    desc: "Darker, richer green with a blue-green lean. More jewel-toned.",
+    primary: "#334155",
+    primaryLight: "#475569",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#047857",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#f1f5f9", "#e2e8f0"],
+    heroTextDark: true,
+  },
+  {
+    name: "Spring",
+    desc: "Lighter, friendlier green. Feels fresh and approachable.",
+    primary: "#334155",
+    primaryLight: "#475569",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#10b981",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#f1f5f9", "#e2e8f0"],
+    heroTextDark: true,
+  },
+  {
+    name: "Teal Forest",
+    desc: "Blue-shifted green, halfway between teal and emerald.",
+    primary: "#334155",
+    primaryLight: "#475569",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#0d9488",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#f1f5f9", "#e2e8f0"],
+    heroTextDark: true,
+  },
+  {
+    name: "Malachite",
+    desc: "Deep saturated green. Bold and authoritative.",
+    primary: "#1e293b",
+    primaryLight: "#374151",
+    accent: "#2563eb",
+    accentLight: "#60a5fa",
+    highlight: "#15803d",
+    bgAlt: "#f9fafb",
+    heroGradient: ["#ffffff", "#f3f4f6", "#e5e7eb"],
+    heroTextDark: true,
+  },
+  {
+    name: "Seafoam",
+    desc: "Soft, muted sea green. Gentle and calming.",
+    primary: "#334155",
+    primaryLight: "#475569",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#2dd4bf",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#f1f5f9", "#e2e8f0"],
+    heroTextDark: true,
+  },
+  {
+    name: "Verdant",
+    desc: "True mid-green, balanced saturation. Classic and clear.",
+    primary: "#0f172a",
+    primaryLight: "#1e293b",
+    accent: "#2563eb",
+    accentLight: "#3b82f6",
+    highlight: "#16a34a",
+    bgAlt: "#f8fafc",
+    heroGradient: ["#ffffff", "#eff6ff", "#dbeafe"],
+    heroTextDark: true,
+  },
+  {
+    name: "Pine",
+    desc: "Very dark forest green. Maximum contrast, minimal presence.",
+    primary: "#1e293b",
+    primaryLight: "#374151",
+    accent: "#3b82f6",
+    accentLight: "#93c5fd",
+    highlight: "#166534",
+    bgAlt: "#f9fafb",
+    heroGradient: ["#ffffff", "#f3f4f6", "#e5e7eb"],
+    heroTextDark: true,
+  },
+];
+
+const grid = document.getElementById('grid');
+const output = document.getElementById('output');
+const cssOutput = document.getElementById('css-output');
+
+function buildMiniPreview(p) {
+  const grad = `linear-gradient(135deg, ${p.heroGradient.join(', ')})`;
+  const dark = p.heroTextDark;
+  const heroH3 = dark ? p.primary : 'white';
+  const heroP = dark ? p.primaryLight : 'rgba(255,255,255,0.8)';
+  const heroBorder = dark ? `border-bottom:1px solid ${p.bgAlt === '#fafafa' ? '#eee' : '#e2e8f0'}` : '';
+  const hl = p.highlight || p.accent; // highlight color, falls back to accent
+  return `
+    <div class="mini-preview">
+      <div class="mini-hero" style="background:${grad};${heroBorder}">
+        <h3 style="color:${heroH3}">Trustworthy AI for Good</h3>
+        <p style="color:${heroP}">Seoul, South Korea &middot; July 2026</p>
+        <span class="mini-btn" style="background:${hl}">Submit a Paper</span>
+      </div>
+      <div class="mini-banner" style="background:${hl}">Special Theme: AI for Civic Discourse and Democratic Defense</div>
+      <div class="mini-section" style="background:${p.bgAlt}">
+        <h4 style="color:${p.primary}">Topics of Interest</h4>
+        <div class="mini-cards">
+          <div class="mini-card"><strong style="color:${p.primary}">Trustworthy AI</strong><span style="color:#888">Evaluation &amp; auditing</span></div>
+          <div class="mini-card" style="border-color:${hl};background:linear-gradient(to br,${hl}08,#fff)"><strong style="color:${hl}">Democracy Defense</strong><span style="color:#888">Disinformation detection</span></div>
+          <div class="mini-card"><strong style="color:${p.primary}">Social Good</strong><span style="color:#888">Evidence standards</span></div>
+        </div>
+      </div>
+      <div class="mini-timeline">
+        <div class="mini-timeline-item"><div class="mini-dot" style="background:${p.accent}"></div><span>March 21 — Portal Opens</span></div>
+        <div class="mini-timeline-item"><div class="mini-dot" style="background:${hl};box-shadow:0 0 0 2px ${hl}33"></div><span style="color:${hl};font-weight:600">April 24 — Deadline</span></div>
+        <div class="mini-timeline-item"><div class="mini-dot" style="background:#cbd5e1"></div><span>May 15 — Notification</span></div>
+      </div>
+    </div>`;
+}
+
+palettes.forEach((p, i) => {
+  const card = document.createElement('div');
+  card.className = 'palette-card' + (i === 0 ? ' selected' : '');
+  card.innerHTML = `
+    <div class="palette-header">
+      <div style="background:${p.primary}"></div>
+      <div style="background:${p.primaryLight}"></div>
+      <div style="background:${p.accent}"></div>
+      <div style="background:${p.accentLight}"></div>
+      <div style="background:${p.highlight || p.bgAlt}"></div>
+    </div>
+    <div class="palette-body">
+      <div class="palette-name">${p.name}</div>
+      <div class="palette-desc">${p.desc}</div>
+      ${buildMiniPreview(p)}
+    </div>`;
+  card.addEventListener('click', () => selectPalette(i));
+  grid.appendChild(card);
+});
+
+function selectPalette(idx) {
+  document.querySelectorAll('.palette-card').forEach((c, i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+  const p = palettes[idx];
+  const hlLine = p.highlight ? `\n  --color-highlight: ${p.highlight};` : '';
+  const css = `  --color-primary: ${p.primary};
+  --color-primary-light: ${p.primaryLight};
+  --color-accent: ${p.accent};
+  --color-accent-light: ${p.accentLight};${hlLine}
+  --color-bg-alt: ${p.bgAlt};`;
+
+  const heroCSS = `\n\n/* Hero gradient */\n.hero {\n  background: linear-gradient(135deg, ${p.heroGradient.join(', ')});\n}`;
+
+  cssOutput.textContent = `:root {\n${css}\n}${heroCSS}`;
+  output.classList.add('visible');
+}
+
+selectPalette(0);
+</script>
+</body>
+</html>
